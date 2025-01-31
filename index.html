@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #282c34;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #444;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            width: 350px;
+        }
+        .slot-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .slot {
+            font-size: 3rem;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 10px;
+            width: 80px;
+            height: 80px;
+            text-align: center;
+        }
+        .slot-win {
+            background-color: gold;
+            animation: jackpot 1s ease-out infinite;
+        }
+        @keyframes jackpot {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+        .bank-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #28a745;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .bank-button:hover {
+            background-color: #218838;
+        }
+        .bank-button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: gold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simulasi Lucky RandomNumber Game's Hi</h1>
+        <div class="slot-container">
+            <div class="slot" id="slot1">0</div>
+            <div class="slot" id="slot2">0</div>
+            <div class="slot" id="slot3">0</div>
+            <div class="slot" id="slot4">0</div>
+            <div class="slot" id="slot5">0</div>
+        </div>
+        <div>
+            <button class="button" id="spinButton">Spin</button>
+        </div>
+        <div style="margin-top: 10px;">
+            <button class="bank-button" id="loanButton">Pinjam Uang ke Bank</button>
+        </div>
+        <div class="status">
+            <p>Saldo: <span id="balance">10000</span></p>
+            <p>Hutang: <span id="debt">0</span></p>
+        </div>
+        <div id="message" style="margin-top: 20px; color: gold;"></div>
+    </div>
+
+    <script>
+        let balance = 10000;
+        let debt = 0;
+        let spinCost = 1000;
+        const jackpotPrize = 50000; // Hadiah untuk jackpot
+        const spinButton = document.getElementById('spinButton');
+        const loanButton = document.getElementById('loanButton');
+        const balanceDisplay = document.getElementById('balance');
+        const debtDisplay = document.getElementById('debt');
+        const message = document.getElementById('message');
+        
+        function getRandomNumber() {
+            return Math.floor(Math.random() * 10); // Angka antara 0 sampai 9
+        }
+
+        function updateSlots() {
+            let slotValues = [];
+            const slots = document.querySelectorAll('.slot');
+            let intervalId = setInterval(() => {
+                for (let i = 0; i < slots.length; i++) {
+                    const randomNum = getRandomNumber();
+                    slots[i].textContent = randomNum;
+                }
+            }, 100);
+
+            setTimeout(() => {
+                clearInterval(intervalId);
+                for (let i = 0; i < slots.length; i++) {
+                    const randomNum = getRandomNumber();
+                    slots[i].textContent = randomNum;
+                    slotValues.push(randomNum);
+                }
+                checkJackpot(slotValues);
+                updateBalance();
+            }, 2000); // Delay spin for 2 seconds to simulate spinning
+        }
+
+        function checkJackpot(slotValues) {
+            if (slotValues.every(val => val === slotValues[0])) {
+                message.textContent = "JACKPOT! Semua angka sama!";
+                for (let i = 0; i < 5; i++) {
+                    document.getElementById('slot' + (i + 1)).classList.add('slot-win');
+                }
+                balance += jackpotPrize; // Menambah saldo jika jackpot
+            } else {
+                message.textContent = '';
+                for (let i = 0; i < 5; i++) {
+                    document.getElementById('slot' + (i + 1)).classList.remove('slot-win');
+                }
+            }
+        }
+
+        function updateBalance() {
+            balanceDisplay.textContent = balance;
+            debtDisplay.textContent = debt;
+
+            // Nonaktifkan tombol spin jika saldo tidak cukup
+            spinButton.disabled = balance < spinCost;
+        }
+
+        spinButton.addEventListener('click', () => {
+            if (balance >= spinCost) {
+                balance -= spinCost; // Deduct balance for spin
+                updateSlots();
+            }
+        });
+
+        loanButton.addEventListener('click', () => {
+            const loanAmount = prompt("Berapa jumlah yang ingin Anda pinjam?", "1000");
+            const amount = parseInt(loanAmount);
+            if (!isNaN(amount) && amount > 0) {
+                debt += amount;  // Menambah hutang sesuai jumlah yang diminta
+                balance += amount; // Menambah saldo sesuai jumlah pinjaman
+                message.textContent = `Anda meminjam ${amount} dari Bank! Saldo sekarang: ${balance}`;
+            } else {
+                message.textContent = 'Masukkan jumlah yang valid!';
+            }
+            updateBalance();
+        });
+
+        updateBalance();
+    </script>
+</body>
+</html>
